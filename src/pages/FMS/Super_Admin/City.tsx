@@ -33,7 +33,9 @@ const City = () => {
     useEffect(() => {
         const fetch = async () => {
             const { data } = await axios.get(`${config.API_BASE_URL}/companies`);
+            
             setCompanyData(data.data);
+            console.log("lets check" ,data.data ,"Dattt" , data.data.filter((item : any)  => !item.subscriptionId));
             console.log('companies', companyData);
             const subscriptionPlan = await axios.get(`${config.API_BASE_URL}/subscription/getsubscriptions`)
             console.log('subscriptionPlan', subscriptionPlan);

@@ -44,6 +44,10 @@ const Payment = () => {
     // static for now
 
     const [filteredItems, setFilteredItems] = useState<any>(userData);
+    const [isViewClicked, setViewClicked] = useState(false);
+    const [addContactModal, setAddContactModal] = useState<any>(false);
+    const [company_id, setCompany_id] = useState<any>()
+
     console.log(filteredItems, 'filteredItems', userData);
 
     useEffect(() => {
@@ -67,6 +71,59 @@ const Payment = () => {
             padding: '10px 20px',
         });
     };
+
+    const editHandler = (id: any) => {
+        setCompany_id(id);
+        setAddContactModal(true);
+        console.log('edit', id);
+        const admin = userData.find((ele: any) => ele.subscriptionmaster_id === id);
+        console.log(admin);
+        formik.setValues(admin);
+    };
+    const deleteHandler = async (id: any) => {
+        try {
+            const response = await axios.delete(`${config.API_BASE_URL}/companies/${id}`);
+            console.log(response);
+            if (response.status === 200 || response.status === 201) {
+                showMessage('admin has been deleted successfully.');
+
+                // setUserData(userData.filter((item: any) => item.id !== id))
+            }
+        } catch (error) {
+            // Handle error
+            console.log('Error deleting admin:', error);
+            showMessage('An error occurred while deleting the admin.');
+        }
+    };
+
+    const formik = useFormik({
+        initialValues: {},
+        onSubmit: async (values: any, { resetForm }) => {
+            try {
+              
+
+                let update = await axios.put(`${config.API_BASE_URL}/subscriptionMaster/update/${company_id}`, values);
+
+                if (update.status === 201 || update.status === 200) {
+                    showMessage('payment has been updated successfully.');
+                    setAddContactModal(false);
+                    resetForm();
+                }
+            } catch (error: any) {
+                showMessage(`${error.response.data.message}`);
+                console.error('Error submitting form:');
+            }
+        },
+    });
+
+    const viewHandler = (id: any) => {
+        const admin = userData.find((ele: any) => ele.subscription_id === id);
+        formik.setValues(admin);
+
+        console.log(formik.values , "formik values");
+        setViewClicked(true);
+        setAddContactModal(true);
+    }
 
     return (
         <div>
@@ -132,9 +189,9 @@ const Payment = () => {
                                                     <button type="button" className="btn btn-sm btn-outline-primary">
                                                         Print
                                                     </button>
-                                                    <button type="button" className="btn btn-sm btn-outline-primary">
+                                                    {userData.PaymentStatus != 'Paid' && (<button type="button" className="btn btn-sm btn-outline-primary" onClick={() => editHandler(userData.subscriptionmaster_id)}>
                                                         Edit
-                                                    </button>
+                                                    </button>)}
                                                 </div>
                                             </td>
                                         </tr>
@@ -145,6 +202,131 @@ const Payment = () => {
                     </div>
                 </div>
             )}
+{/*  update model */}
+
+<Transition appear show={addContactModal} as={Fragment}>
+                <Dialog
+                    as="div"
+                    open={addContactModal}
+                    onClose={() => {
+                        setAddContactModal(false);
+                        setViewClicked(false);
+                    }}
+                    className="relative z-[51]"
+                >
+                    <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+                        <div className="fixed inset-0 bg-[black]/60" />
+                    </Transition.Child>
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center px-4 py-8">
+                            <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0 scale-95"
+                                enterTo="opacity-100 scale-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100 scale-100"
+                                leaveTo="opacity-0 scale-95"
+                            >
+                                <Dialog.Panel className="panel border-0 p-0 rounded-lg overflow-hidden w-full max-w-lg text-black dark:text-white-dark">
+                                    <div className="p-5">
+                                        {/* Form */}
+                                        <form onSubmit={formik.handleSubmit} className="shadow-lg shadow-indigo-500/40 p-4 ">
+                    <div>
+                        <div className="grid mt-5 mr-20 ml-10 grid-cols-1 sm:grid-cols-2 gap-4 mr-5">
+                            <div>
+                                <label htmlFor="businessName">Payment Date </label>
+                                <input
+                                    id="PaymentDate"
+                                    name="PaymentDate"
+                                    onChange={(e) => {
+                                        formik.handleChange(e);
+                                        formik.values.PaymentDate = !e.target.value ? new Date() : e.target.value;
+                                    }}
+                                    type="date"
+                                    className="form-input"
+                                    // readOnly
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="PaymentDate"> Company </label>
+                                <input id="" name="businessName" onChange={formik.handleChange} value={formik.values?.Company?.businessName} type="text" className="form-input" readOnly />
+
+                            </div>
+                        </div>
+                        <div className="grid mt-5 mr-20 ml-10 grid-cols-1 sm:grid-cols-3 gap-4 mr-5">
+                            <div>
+                            <label htmlFor="PaymentDate"> Plan </label>
+                            <input id="businessName" name="amount" onChange={formik.handleChange} value={formik.values?.Subscription?.planName} type="text" className="form-input" readOnly />
+                                
+                            </div>
+                            <div>
+                                <label htmlFor="businessName">Amount</label>
+                                <input id="businessName" name="amount" onChange={formik.handleChange} value={formik?.values?.Subscription?.amount} type="text" className="form-input" readOnly />
+                            </div>
+                            <div>
+                                <label htmlFor="businessName">Collect Amount</label>
+                                <input id="businessName" name="amount" onChange={formik.handleChange} value={formik.values.Subscription?.amount} type="input" className="form-input" />
+                            </div>
+                        </div>
+                        <div className="grid mt-5 mr-20 ml-10 grid-cols-1 sm:grid-cols-2 gap-4 mr-5">
+                            <div>
+                                <label htmlFor="businessName">trasction Date </label>
+                                <input
+                                    id="businessName"
+                                    name="transactionDate"
+                                    onChange={(e) => {
+                                        formik.handleChange(e);
+                                        formik.values.transactionDate = !e.target.value ? new Date() : e.target.value;
+                                    }}
+                                    // value={currentDate}
+                                    type="date"
+                                    defaultValue={new Date().toDateString()}
+                                    className="form-input"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="businessName">Payment Mode</label>
+                                <select name="paymentMode" onChange={formik.handleChange} id="1" className="form-select text-white-dark" value={formik.values.paymentMode} required>
+                                    <option value="Online">Online</option>
+                                    <option value="wire">wire</option>
+                                    <option value="cash">cash</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="businessName">reference number </label>
+                                <input
+                                    id="paymentReference"
+                                    name="paymentReference"
+                                    onChange={formik.handleChange}
+                                    value={formik.values.paymentReference}
+                                    type="text"
+                                    className="form-input"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid mt-4 mr-20 ml-10 mb-10 grid-cols-4 p-5 sm:grid-cols-4 gap-2 mr-5 mb-10">
+                            <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-auto w-100 mr-2 w-full ">
+                                Submit
+                            </button>
+                            <button type="button" onClick={formik.handleReset} className="bg-red-900 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-auto w-full ">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                                        {/* close form */}
+                                    </div>
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
+
         </div>
     );
 };

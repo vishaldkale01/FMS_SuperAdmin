@@ -15,7 +15,7 @@ import IconTwitter from '../../../components/Icon/IconTwitter';
 import IconX from '../../../components/Icon/IconX';
 import axios from 'axios';
 import config from '../../../congif/config';
-import { useFormik } from 'formik';
+import { ErrorMessage, useFormik } from 'formik';
 import * as Yup from 'yup';
 
 const Country = () => {
@@ -58,6 +58,10 @@ const Country = () => {
     };
     const validationSchema = Yup.object().shape({
         country_name: Yup.string().required('Country Name is required'),
+        password: Yup.string().required('Password is required'),
+        confirmPassword: Yup.string()
+            .oneOf([Yup.ref('password'), null], 'Passwords must match')
+            .required('Password confirmation is required'),
     });
 
     const initialValues = {
@@ -80,32 +84,41 @@ const Country = () => {
         countryName1: '',
         taxRegNo: '',
         websiteAddress: '',
-        username: 'vishal',
-        password: '123',
+        username: '',
+        password: '',
+        confirmPassword : "",
         adminId: 1,
     };
     const formik = useFormik({
         initialValues: initialValues,
         onSubmit: async (values: any, { resetForm }) => {
             try {
+                if (values.password !== values.confirmPassword) {
+                    return showMessage('Passwords do not match', 'error');
+                }
                 const formData: any = new FormData();
                 console.log(values, 'dfs');
 
                 Object.keys(values).forEach((ele) => {
                     formData.append(ele, values[ele]);
                 });
+                delete formData.confirmPassword
                 console.log('dddd', formData);
 
                 let addUSer = await axios.post(`${config.API_BASE_URL}/companies`, formData);
-                console.log(addUSer , "ddddddddddddddddddd");
-                
+                console.log(addUSer, 'ddddddddddddddddddd');
+
                 if (addUSer.status === 201) {
+                    formData.confirmPassword = values.confirmPassword
                     showMessage('User has been saved successfully.');
                     resetForm();
                 }
-            } catch (error) {
-                for (const key in { ...formik.values }) {
-                    !formik.values[key] ? showMessage(`required ${key}`) : '';
+            } catch (error: any) {
+                for (const key in error.response.data.message) {
+                    if (Object.prototype.hasOwnProperty.call(error.response.data.message, key)) {
+                        const element = error.response.data.message[key];
+                        showMessage(element);
+                    }
                 }
                 console.error('Error submitting form:', error);
             }
@@ -295,10 +308,10 @@ const Country = () => {
                                     Address 2
                                 </label>
                                 <input
-                                    id="address"
-                                    name="address"
+                                    id="address1"
+                                    name="address1"
                                     onChange={formik.handleChange}
-                                    value={formik.values.address}
+                                    value={formik.values.address1}
                                     type="text"
                                     placeholder="Enter Address 1"
                                     className="form-input"
@@ -374,7 +387,56 @@ const Country = () => {
                                 required
                             />
                         </div>
-                        <div className="grid mt-4 mr-20 ml-10 mb-10 grid-cols-4 p-5 sm:grid-cols-4 gap-2 mr-5 mb-10">
+
+                        <div className="grid mt-4 mr-20 ml-10 grid-cols-1 sm:grid-cols-3 gap-4 mr-5">
+                            <div>
+                                <label htmlFor="routename" className="ml-2">
+                                    User Name
+                                </label>
+                                <input
+                                    id="username"
+                                    name="username"
+                                    onChange={formik.handleChange}
+                                    value={formik.values.username}
+                                    type="text"
+                                    placeholder="Enter User Name"
+                                    className="form-input"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="routename" className="ml-2">
+                                    Password
+                                </label>
+                                <input
+                                    id="password"
+                                    name="password"
+                                    onChange={formik.handleChange}
+                                    value={formik.values.password}
+                                    type="text"
+                                    placeholder="Enter Password"
+                                    className="form-input"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="routename" className="ml-2">
+                                    Confirm Password
+                                </label>
+                                <input
+                                    id="password"
+                                    name="confirmPassword"
+                                    onChange={formik.handleChange}
+                                    value={formik.values.confirmPassword}
+                                    type="text"
+                                    placeholder="Reenter Password"
+                                    className="form-input"
+                                    required
+                                />
+                                </div>
+                        </div>
+                        <div className="grid mt-5 mr-20 ml-20 mb-5 grid-cols-4 p-5 sm:grid-cols-2 gap-2">
                             <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-auto w-100 mr-2 w-full ">
                                 Submit
                             </button>

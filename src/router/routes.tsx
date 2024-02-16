@@ -138,7 +138,7 @@ const routes = [
     //     // dashboard
     {
         path: '/',
-        element: <Index />,
+        element: <Border />,
     },
     //     // {
     //     //     path: '/index',
@@ -463,6 +463,11 @@ const routes = [
             element: <LoginBoxed />,
             layout: 'blank',
         },
+        // {
+        //     path: '/',
+        //     element: <Index />,
+        //     layout: 'blank',
+        // },
         {
             path: '/auth/boxed-signup',
             element: <RegisterBoxed />,

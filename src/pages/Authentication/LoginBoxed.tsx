@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Await, Link, useNavigate, useNavigation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../../store';
 import { useEffect, useState } from 'react';
@@ -12,12 +12,15 @@ import IconInstagram from '../../components/Icon/IconInstagram';
 import IconFacebookCircle from '../../components/Icon/IconFacebookCircle';
 import IconTwitter from '../../components/Icon/IconTwitter';
 import IconGoogle from '../../components/Icon/IconGoogle';
-
+import { Formik, useFormik } from 'formik';
+import axios from 'axios';
+import config from '../../congif/config';
+import Swal from 'sweetalert2';
 const LoginBoxed = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Login Boxed'));
-    });
+    }, []);
     const navigate = useNavigate();
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
@@ -32,9 +35,54 @@ const LoginBoxed = () => {
     };
     const [flag, setFlag] = useState(themeConfig.locale);
 
-    const submitForm = () => {
-        navigate('/');
+    // s
+    const navigation = useNavigate();
+    const showMessage = (msg = '', type = 'success') => {
+        const toast: any = Swal.mixin({
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+            customClass: { container: 'toast' },
+        });
+        toast.fire({
+            icon: type,
+            title: msg,
+            padding: '10px 20px',
+        });
     };
+
+    const formik = useFormik({
+        initialValues: {
+            username: '',
+            password: '',
+        },
+        onSubmit: async (values: any) => {
+            try {
+                console.log(values);
+            // Your form submission logic goes here
+            const superadmin = await axios.post(`${config.API_BASE_URL}/auth/admin/login`, values);
+            console.log(superadmin, 'superadminsuperadminsuperadmin');
+
+            console.log('superAsmin');
+
+            if (superadmin) {
+                localStorage.setItem('token', 'islogin');
+                showMessage('Login Success');
+                navigation('/');
+                window.location.reload();
+            } else {
+                showMessage('check login credentials ');
+            }
+            console.log(values);
+        } catch (error : any) {
+            console.log(error.response.data.message , "erroror")
+            
+            showMessage(`${error.response.data.message}`);
+                
+            }
+        },
+    });
 
     return (
         <div>
@@ -93,22 +141,37 @@ const LoginBoxed = () => {
                         <div className="mx-auto w-full max-w-[440px]">
                             <div className="mb-10">
                                 <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Sign in</h1>
-                                <p className="text-base font-bold leading-normal text-white-dark">Enter your email and password to login</p>
+                                <p className="text-base font-bold leading-normal text-white-dark">Enter your username and password to login</p>
                             </div>
-                            <form className="space-y-5 dark:text-white" onSubmit={submitForm}>
+
+                            <form className="space-y-5 dark:text-white" onSubmit={formik.handleSubmit}>
                                 <div>
-                                    <label htmlFor="Email">Email</label>
+                                    <label htmlFor="username">username</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Email" type="email" placeholder="Enter Email" className="form-input ps-10 placeholder:text-white-dark" />
+                                        <input
+                                            id="username"
+                                            type="username"
+                                            value={formik.values.username}
+                                            onChange={formik.handleChange}
+                                            placeholder="Enter username"
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconMail fill={true} />
                                         </span>
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="Password">Password</label>
+                                    <label htmlFor="password">password</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Password" type="password" placeholder="Enter Password" className="form-input ps-10 placeholder:text-white-dark" />
+                                        <input
+                                            id="password"
+                                            type="password"
+                                            value={formik.values.password}
+                                            onChange={formik.handleChange}
+                                            placeholder="Enter password"
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconLockDots fill={true} />
                                         </span>
@@ -124,6 +187,7 @@ const LoginBoxed = () => {
                                     Sign in
                                 </button>
                             </form>
+
                             <div className="relative my-7 text-center md:mb-9">
                                 <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
                                 <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">or</span>

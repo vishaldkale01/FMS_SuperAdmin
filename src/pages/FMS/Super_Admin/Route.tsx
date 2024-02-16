@@ -27,8 +27,8 @@ const Route = () => {
     });
     const [payment, setPayment] = useState<any>([]);
     const [subscriptionData, setSubscriptionData] = useState<any>([]);
-    const [isLoading, setIsLoading] = useState<any>(true);
     const [adminPlan, setAdminPlan] = useState<any>();
+    const [isLoading, setIsLoading] = useState<any>(true);
 
     const [addContactModal, setAddContactModal] = useState<any>(false);
     const [viewContactModal, setViewContactModal] = useState<any>(false);
@@ -90,7 +90,7 @@ const Route = () => {
                 console.log(values);
                 values.amount = adminPlan.Subscription.amount;
                 !formik.values.PaymentDate ? (formik.values.PaymentDate = new Date()) : '';
-                let SubscriptionPlanMaster = await axios.put(`${config.API_BASE_URL}/subscriptionMaster/update`, values);
+                let SubscriptionPlanMaster = await axios.put(`${config.API_BASE_URL}/subscriptionMaster/update/${values.subscriptionmaster_id}`, values);
                 console.log(SubscriptionPlanMaster);
 
                 if (SubscriptionPlanMaster.status === 200 || SubscriptionPlanMaster.status === 201) {
@@ -206,6 +206,7 @@ const Route = () => {
                             <div>
                                 <label htmlFor="businessName">Payment Mode</label>
                                 <select name="paymentMode" onChange={formik.handleChange} id="1" className="form-select text-white-dark" value={formik.values.paymentMode} required>
+                                    <option value="">Select Payment mode</option>
                                     <option value="Online">Online</option>
                                     <option value="wire">wire</option>
                                     <option value="cash">cash</option>
